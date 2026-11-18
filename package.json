@@ -1,0 +1,29 @@
+{
+  "name": "rakazo-discord-selfbot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Discord selfbot bridge for Rakazo: wakes routines from Discord events and exposes Discord actions as MCP tools.",
+  "engines": {
+    "node": ">=20.18.0"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.test.json",
+    "test": "vitest run",
+    "cli": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "discord.js-selfbot-v13": "^3.7.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.9.2",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.12"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.1.0/plugin.schema.json",
+  "name": "discord-selfbot",
+  "version": "0.1.0",
+  "description": "Read and send Discord messages as your own account, from a selfbot bridge you host."
+}

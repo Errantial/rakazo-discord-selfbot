@@ -1,0 +1,15 @@
+{
+  "triggers": {
+    "dms": true,
+    "messageRequests": false,
+    "mentions": true,
+    "keywords": ["deploy", "invoice"],
+    "channelIds": [],
+    "ignoreUserIds": []
+  },
+  "send": {
+    "mode": "allowlist",
+    "allowlist": [],
+    "dmOnly": true
+  }
+}
