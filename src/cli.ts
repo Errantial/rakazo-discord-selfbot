@@ -7,8 +7,22 @@ import { checkSend } from "./mcp/server.js";
  * Try the bridge without an agent: `npm run cli -- list`, `read <channelId>`,
  * `whoami`, or `send <channelId> <text>`. Sending still honours the send mode.
  */
+const USAGE = [
+  "Usage: cli <command>",
+  "  whoami",
+  "  list [limit]",
+  "  read <channelId> [limit]",
+  "  profile <userId> [guildId]",
+  "  guilds",
+  "  send <channelId> <text>",
+].join("\n");
+
 async function main(): Promise<void> {
   const [command, ...args] = process.argv.slice(2);
+  if (!command) {
+    console.log(USAGE);
+    return;
+  }
   const config = await loadConfig();
   const client = new Client({ ...(config.totpKey ? { TOTPKey: config.totpKey } : {}) });
 
@@ -75,17 +89,7 @@ async function main(): Promise<void> {
         break;
       }
       default:
-        console.log(
-          [
-            "Usage: cli <command>",
-            "  whoami",
-            "  list [limit]",
-            "  read <channelId> [limit]",
-            "  profile <userId> [guildId]",
-            "  guilds",
-            "  send <channelId> <text>",
-          ].join("\n"),
-        );
+        console.log(USAGE);
     }
   } finally {
     client.destroy();

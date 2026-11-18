@@ -74,12 +74,23 @@ type RawAttachment = {
   size?: number;
 };
 
+/**
+ * `User#getProfile` returns Discord's raw profile JSON, which is snake_case and
+ * is not a library User. Read both spellings so a future library change to
+ * camelCase does not silently blank the profile.
+ */
+type RawProfileUser = RawUser & {
+  global_name?: string | null;
+  created_at?: string;
+  bio?: string | null;
+  pronouns?: string | null;
+  avatar?: string | null;
+  banner?: string | null;
+  connected_accounts?: Array<{ type: string; name: string; verified?: boolean }>;
+};
+
 type RawProfile = {
-  user?: RawUser & {
-    bio?: string | null;
-    pronouns?: string | null;
-    connected_accounts?: Array<{ type: string; name: string; verified?: boolean }>;
-  };
+  user?: RawProfileUser;
   user_profile?: {
     bio?: string | null;
     pronouns?: string | null;
@@ -178,6 +189,30 @@ function messageOf(raw: RawMessage, kind: ChannelKind): DiscordMessage {
 /** Sort newest first without trusting the API's ordering. */
 function newestFirst(messages: DiscordMessage[]): DiscordMessage[] {
   return [...messages].sort((a, b) => b.id.localeCompare(a.id, "en", { numeric: true }));
+}
+
+/**
+ * `bannerURL()` throws until the banner is fetched, and `displayAvatarURL()`
+ * needs a live client. A profile lookup must not fail over a picture.
+ */
+function safeAvatarUrl(user: RawUser, raw: RawProfileUser | undefined): string | null {
+  try {
+    const url = user.displayAvatarURL?.({ size: 256 });
+    if (url) return url;
+  } catch {
+    // fall through to the raw hash
+  }
+  return raw?.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${raw.avatar}.png?size=256` : null;
+}
+
+function safeBannerUrl(user: RawUser, raw: RawProfileUser | undefined): string | null {
+  try {
+    const url = user.bannerURL?.({ size: 600 });
+    if (url) return url;
+  } catch {
+    // banner not fetched; use the raw hash when the profile carried one
+  }
+  return raw?.banner ? `https://cdn.discordapp.com/banners/${user.id}/${raw.banner}.png?size=600` : null;
 }
 
 export type SelfbotAdapterOptions = {
@@ -310,15 +345,20 @@ export class SelfbotDiscordApi implements DiscordApi {
     const connected =
       raw.connected_accounts ?? profile.connected_accounts ?? raw.user?.connected_accounts ?? [];
 
+    // The cached library User is the reliable source for name and timestamps;
+    // the raw profile JSON only adds what the cache does not hold.
+    const name = authorOf(user);
+    if (name.globalName === null && raw.user?.global_name) name.globalName = raw.user.global_name;
+
     return {
       user: {
-        ...authorOf(raw.user ?? user),
-        createdAt: (raw.user?.createdAt ?? user.createdAt)?.toISOString() ?? null,
+        ...name,
+        createdAt: user.createdAt?.toISOString() ?? raw.user?.created_at ?? null,
       },
       bio: profile.bio ?? raw.user?.bio ?? user.bio ?? null,
       pronouns: profile.pronouns ?? raw.user?.pronouns ?? user.pronouns ?? null,
-      avatarUrl: (raw.user ?? user).displayAvatarURL?.({ size: 256 }) ?? null,
-      bannerUrl: (raw.user ?? user).bannerURL?.({ size: 600 }) ?? null,
+      avatarUrl: safeAvatarUrl(user, raw.user),
+      bannerUrl: safeBannerUrl(user, raw.user),
       relationship: user.relationship ?? null,
       friendNickname: user.friendNickname ?? null,
       note: user.note ?? null,
@@ -403,7 +443,11 @@ export class SelfbotDiscordApi implements DiscordApi {
     };
     const cached = manager.cache.get(channelId) as (AnyChannel & { messages: unknown }) | undefined;
     if (cached) return cached;
-    const fetched = (await manager.fetch(channelId)) as (AnyChannel & { messages: unknown }) | null;
+    // The library's fetch rejects for an unknown id rather than returning null,
+    // so a bad id would otherwise surface as a raw HTTP error to the agent.
+    const fetched = (await manager.fetch(channelId).catch(() => null)) as
+      | (AnyChannel & { messages: unknown })
+      | null;
     if (!fetched) throw new Error(`Unknown channel ${channelId}`);
     return fetched;
   }

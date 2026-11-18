@@ -56,7 +56,7 @@ const RakazoConfig = z.object({
 export type RakazoConfig = z.infer<typeof RakazoConfig>;
 
 const McpConfig = z.object({
-  port: z.number().int().min(1).max(65_535).default(8787),
+  port: z.number().int().min(1).max(65_535).default(8791),
   host: z.string().default("127.0.0.1"),
   path: z.string().startsWith("/").default("/mcp"),
   /** Bearer token clients must present. Generated and printed when unset. */
@@ -220,7 +220,7 @@ export async function loadConfig(env: Env = process.env): Promise<Config> {
         }
       : null,
     mcp: {
-      port: int(env.DISCORD_MCP_PORT, 8787),
+      port: int(env.DISCORD_MCP_PORT, 8791),
       host: optional(env.DISCORD_MCP_HOST) ?? "127.0.0.1",
       path: optional(env.DISCORD_MCP_PATH) ?? "/mcp",
       token: mcpToken,

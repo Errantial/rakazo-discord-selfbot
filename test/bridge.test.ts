@@ -25,7 +25,7 @@ function config(overrides: Partial<Config> = {}): Config {
       extraHeaders: {},
       timeoutMs: 1_000,
     },
-    mcp: { port: 8787, host: "127.0.0.1", path: "/mcp", token: null },
+    mcp: { port: 8791, host: "127.0.0.1", path: "/mcp", token: null },
     verbose: false,
     logFile: null,
     ...overrides,

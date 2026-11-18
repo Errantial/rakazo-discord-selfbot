@@ -71,7 +71,7 @@ It prints the MCP URL and, unless you set `DISCORD_MCP_TOKEN`, a generated beare
 Rakazo plugins need a public HTTPS URL, so put a tunnel in front of the loopback port:
 
 ```bash
-cloudflared tunnel --url http://127.0.0.1:8787
+cloudflared tunnel --url http://127.0.0.1:8791
 ```
 
 Then in Rakazo: **Integrations → + → Manage MCP servers**, add `https://<tunnel-host>/mcp`, and set
@@ -100,7 +100,7 @@ Everything is environment variables; `.env.example` lists them all with defaults
 | `DISCORD_SEND_MODE` | `off` | `off`, `allowlist`, or `all`. |
 | `DISCORD_SEND_ALLOWLIST` | — | Channel or user ids that may receive a send. |
 | `DISCORD_SEND_DM_ONLY` | `false` | Refuse to post in server channels. |
-| `DISCORD_MCP_PORT` | `8787` | MCP HTTP port. |
+| `DISCORD_MCP_PORT` | `8791` | MCP HTTP port. |
 | `DISCORD_MCP_HOST` | `127.0.0.1` | MCP bind address. |
 | `DISCORD_MCP_PATH` | `/mcp` | MCP path. |
 | `DISCORD_MCP_TOKEN` | generated | Bearer token clients must present. |
@@ -166,10 +166,16 @@ npm run cli -- send <channelId> "on it"
 ## Development
 
 ```bash
-npm test          # offline; a fake Discord and a fake Rakazo
+npm test          # offline; real library objects, a fake Rakazo
 npm run typecheck
 npm run build && npm start
 ```
+
+`test/library.test.ts` builds real `discord.js-selfbot-v13` objects offline and stubs only the
+network, so the adapter is checked against the library's actual shapes. It caught three bugs a
+hand-written fake would have missed: `getProfile` returns raw snake_case JSON (not a library `User`),
+`User#bannerURL()` throws until the banner is fetched, and the library's channel `fetch` rejects
+rather than returning null for an unknown id.
 
 `src/discord/types.ts` is the port: everything above it talks to `DiscordApi`, and only
 `src/discord/selfbot.ts` imports discord.js-selfbot-v13. That library is archived, so keeping it at

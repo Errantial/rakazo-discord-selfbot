@@ -17,7 +17,7 @@ describe("loadConfig", () => {
     });
     expect(config.send.mode).toBe("off");
     expect(config.rakazo).toBeNull();
-    expect(config.mcp).toMatchObject({ port: 8787, host: "127.0.0.1", path: "/mcp" });
+    expect(config.mcp).toMatchObject({ port: 8791, host: "127.0.0.1", path: "/mcp" });
   });
 
   it("requires a token", async () => {
