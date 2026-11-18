@@ -102,3 +102,46 @@ describe("loadConfig", () => {
     await expect(loadConfig({ ...base, DISCORD_RULES_FILE: rules })).rejects.toThrow(/not valid JSON/);
   });
 });
+
+describe("unprefixed aliases", () => {
+  // Rakazo reserves the RAKAZO_ prefix for its own command variables, so a bot
+  // configuring this bridge has to use these names.
+  it("accepts ROUTINE_* for the webhook pair", async () => {
+    const config = await loadConfig({
+      SELFBOT_TOKEN: "tok",
+      ROUTINE_WEBHOOK_URL: "https://rakazo.example/api/v1/bots/b/webhook",
+      ROUTINE_WEBHOOK_SECRET: "key",
+    });
+    expect(config.discordToken).toBe("tok");
+    expect(config.rakazo).toMatchObject({ webhookSecret: "key", timeoutMs: 15_000 });
+  });
+
+  it("accepts SELFBOT_TOKEN and SELFBOT_MCP_TOKEN", async () => {
+    const config = await loadConfig({
+      SELFBOT_TOKEN: "tok",
+      SELFBOT_MCP_TOKEN: "a-long-enough-mcp-token",
+    });
+    expect(config.mcp.token).toBe("a-long-enough-mcp-token");
+  });
+
+  it("prefers the descriptive name when both are set", async () => {
+    const config = await loadConfig({
+      DISCORD_TOKEN: "primary",
+      SELFBOT_TOKEN: "alias",
+      ROUTINE_WEBHOOK_URL: "https://rakazo.example/api/v1/bots/b/webhook",
+      ROUTINE_WEBHOOK_SECRET: "alias-key",
+      RAKAZO_WEBHOOK_SECRET: "primary-key",
+    });
+    expect(config.discordToken).toBe("primary");
+    expect(config.rakazo?.webhookSecret).toBe("primary-key");
+  });
+
+  it("still requires a secret with an aliased URL", async () => {
+    await expect(
+      loadConfig({
+        SELFBOT_TOKEN: "tok",
+        ROUTINE_WEBHOOK_URL: "https://rakazo.example/api/v1/bots/b/webhook",
+      }),
+    ).rejects.toThrow(/webhook secret/i);
+  });
+});

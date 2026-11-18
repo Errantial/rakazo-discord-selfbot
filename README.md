@@ -84,10 +84,10 @@ Everything is environment variables; `.env.example` lists them all with defaults
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `DISCORD_TOKEN` | — | Account token. Required. |
+| `DISCORD_TOKEN` | — | Account token. Required. Alias: `SELFBOT_TOKEN`. |
 | `DISCORD_TOTP_KEY` | — | TOTP secret if the account has 2FA. |
-| `RAKAZO_WEBHOOK_URL` | — | Routine webhook URL. Without it, nothing wakes. |
-| `RAKAZO_WEBHOOK_SECRET` | — | The bot's webhook key, sent as a bearer token. |
+| `RAKAZO_WEBHOOK_URL` | — | Routine webhook URL. Without it, nothing wakes. Alias: `ROUTINE_WEBHOOK_URL`. |
+| `RAKAZO_WEBHOOK_SECRET` | — | The bot's webhook key, sent as a bearer token. Alias: `ROUTINE_WEBHOOK_SECRET`. |
 | `DISCORD_TRIGGER_DMS` | `true` | DMs wake a routine. |
 | `DISCORD_TRIGGER_MESSAGE_REQUESTS` | `false` | DMs from people you have not accepted wake one. |
 | `DISCORD_TRIGGER_MENTIONS` | `true` | @mentions in servers wake one. |
@@ -103,7 +103,7 @@ Everything is environment variables; `.env.example` lists them all with defaults
 | `DISCORD_MCP_PORT` | `8791` | MCP HTTP port. |
 | `DISCORD_MCP_HOST` | `127.0.0.1` | MCP bind address. |
 | `DISCORD_MCP_PATH` | `/mcp` | MCP path. |
-| `DISCORD_MCP_TOKEN` | generated | Bearer token clients must present. |
+| `DISCORD_MCP_TOKEN` | generated | Bearer token clients must present. Alias: `SELFBOT_MCP_TOKEN`. |
 | `DISCORD_RULES_FILE` | — | JSON file of trigger and send rules; env wins. |
 | `DISCORD_LOG_FILE` | — | Append wake decisions to a file. |
 | `DISCORD_VERBOSE` | `false` | Log skipped messages too. |
@@ -135,6 +135,24 @@ Long trigger lists are easier in a file:
 ```
 
 Environment variables override matching fields.
+
+### Unprefixed aliases
+
+Rakazo reserves the `RAKAZO_` prefix for its own command variables, so a Rakazo bot cannot export
+`RAKAZO_WEBHOOK_URL` itself. Every `RAKAZO_*` and `DISCORD_TOKEN`/`DISCORD_MCP_TOKEN` setting also
+has an unprefixed alias that a bot can save as a command credential:
+
+| Prefixed | Alias |
+| --- | --- |
+| `DISCORD_TOKEN` | `SELFBOT_TOKEN` |
+| `RAKAZO_WEBHOOK_URL` | `ROUTINE_WEBHOOK_URL` |
+| `RAKAZO_WEBHOOK_SECRET` | `ROUTINE_WEBHOOK_SECRET` |
+| `RAKAZO_TIMEOUT_MS` | `ROUTINE_TIMEOUT_MS` |
+| `DISCORD_MCP_TOKEN` | `SELFBOT_MCP_TOKEN` |
+
+The prefixed name wins when both are set.
+
+To have a Rakazo bot set this up for you, hand it [docs/SETUP_BRIEF.md](docs/SETUP_BRIEF.md).
 
 ## MCP tools
 

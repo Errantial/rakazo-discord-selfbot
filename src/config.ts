@@ -108,6 +108,21 @@ function optional(value: string | undefined): string | null {
 }
 
 /**
+ * Read the first variable that is set.
+ *
+ * Rakazo reserves the `RAKAZO_` prefix for its own command variables, so a bot
+ * told to configure this bridge cannot export `RAKAZO_WEBHOOK_URL` itself. The
+ * unprefixed aliases let it, while the descriptive names stay the default.
+ */
+function first(env: Env, names: string[]): string | undefined {
+  for (const name of names) {
+    const value = optional(env[name]);
+    if (value) return value;
+  }
+  return undefined;
+}
+
+/**
  * A trigger file lets you keep rules in one place. Environment variables win
  * over it, so a one-off override does not need a file edit.
  */
@@ -119,7 +134,7 @@ const TriggerFile = z.object({
 export type Env = Record<string, string | undefined>;
 
 export async function loadConfig(env: Env = process.env): Promise<Config> {
-  const token = optional(env.DISCORD_TOKEN);
+  const token = first(env, ["DISCORD_TOKEN", "SELFBOT_TOKEN"]);
   if (!token) {
     throw new ConfigError(
       "DISCORD_TOKEN is required. It is your account token, so treat it like a password.",
@@ -151,14 +166,16 @@ export async function loadConfig(env: Env = process.env): Promise<Config> {
   const fileTriggers = fromFile.triggers ?? {};
   const fileSend = fromFile.send ?? {};
 
-  const webhookUrl = optional(env.RAKAZO_WEBHOOK_URL);
-  const webhookSecret = optional(env.RAKAZO_WEBHOOK_SECRET);
+  const webhookUrl = first(env, ["RAKAZO_WEBHOOK_URL", "ROUTINE_WEBHOOK_URL"]);
+  const webhookSecret = first(env, ["RAKAZO_WEBHOOK_SECRET", "ROUTINE_WEBHOOK_SECRET"]);
   if (webhookUrl && !webhookSecret) {
-    throw new ConfigError("RAKAZO_WEBHOOK_SECRET is required when RAKAZO_WEBHOOK_URL is set.");
+    throw new ConfigError(
+      "A webhook secret is required when a routine webhook URL is set (RAKAZO_WEBHOOK_SECRET or ROUTINE_WEBHOOK_SECRET).",
+    );
   }
 
   let extraHeaders: Record<string, string> = {};
-  const extraHeadersRaw = optional(env.RAKAZO_EXTRA_HEADERS);
+  const extraHeadersRaw = first(env, ["RAKAZO_EXTRA_HEADERS", "ROUTINE_EXTRA_HEADERS"]);
   if (extraHeadersRaw) {
     let parsed: unknown;
     try {
@@ -198,7 +215,7 @@ export async function loadConfig(env: Env = process.env): Promise<Config> {
     ? z.enum(["off", "allowlist", "all"]).parse(sendModeRaw)
     : (fileSend.mode ?? "off");
 
-  const mcpToken = optional(env.DISCORD_MCP_TOKEN);
+  const mcpToken = first(env, ["DISCORD_MCP_TOKEN", "SELFBOT_MCP_TOKEN"]);
 
   return Config.parse({
     discordToken: token,
@@ -216,7 +233,7 @@ export async function loadConfig(env: Env = process.env): Promise<Config> {
           webhookUrl,
           webhookSecret: webhookSecret as string,
           extraHeaders,
-          timeoutMs: int(env.RAKAZO_TIMEOUT_MS, 15_000),
+          timeoutMs: int(first(env, ["RAKAZO_TIMEOUT_MS", "ROUTINE_TIMEOUT_MS"]), 15_000),
         }
       : null,
     mcp: {

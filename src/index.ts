@@ -30,7 +30,9 @@ export async function main(): Promise<void> {
     );
   }
   if (!config.rakazo) {
-    console.log("No RAKAZO_WEBHOOK_URL: messages are matched but nothing is woken. Tools still work.");
+    console.log(
+      "No routine webhook configured (RAKAZO_WEBHOOK_URL or ROUTINE_WEBHOOK_URL): messages are matched but nothing is woken. Tools still work.",
+    );
   }
 
   const client = new Client({
