@@ -16,6 +16,10 @@ gives the agent its Discord tools.
 > account. The token is the account, so anything holding it holds your account. Use a throwaway
 > account if you can. See [Risks](#risks).
 
+> **Want a Rakazo bot to set this up for you?** Hand it
+> [docs/SETUP_BRIEF.md](docs/SETUP_BRIEF.md). It walks through the credentials, the routine, the
+> tunnel, and the end-to-end test.
+
 ## How a message becomes a run
 
 ```
