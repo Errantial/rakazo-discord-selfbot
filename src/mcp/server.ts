@@ -37,8 +37,6 @@ const channelKind = z.enum(["dm", "group_dm", "guild_text", "thread", "other"]);
 export type ServerDeps = {
   api: DiscordApi;
   config: Config;
-  /** Injectable for tests. */
-  now?: () => Date;
 };
 
 export function createMcpServer({ api, config }: ServerDeps): McpServer {
